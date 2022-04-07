@@ -1,0 +1,24 @@
+{
+  "title": "ATOM Cam",
+  "config": {
+    "abort": {
+      "auth_unsupported": "現在、認証には対応していません。\nログイン認証をOFFにてご利用ください。"
+    },
+    "error": {
+      "auth_failed": "認証情報が間違っています",
+      "auth_required": "認証情報の入力が必要です",
+      "auth_unsupported": "現在、認証には対応していません。\nログイン認証をOFFにてご利用ください。"
+    },
+    "step": {
+      "user": {
+        "description": "注意：予め https://github.com/mnakada/atomcam_tools#readme を導入しておく必要があります",
+        "data": {
+          "host": "ホスト名",
+          "mac": "MACアドレス",
+          "username": "アカウント",
+          "password": "パスワード"
+        }
+      }
+    }
+  }
+}

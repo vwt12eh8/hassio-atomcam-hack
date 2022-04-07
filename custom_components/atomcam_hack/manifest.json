@@ -1,0 +1,16 @@
+{
+  "domain": "atomcam_hack",
+  "name": "ATOM Cam",
+  "version": "1.0",
+  "config_flow": true,
+  "codeowners": [
+    "@vwt12eh8"
+  ],
+  "dhcp": [
+    {
+      "hostname": "atom",
+      "macaddress": "7CDDE9*"
+    }
+  ],
+  "iot_class": "local_polling"
+}
