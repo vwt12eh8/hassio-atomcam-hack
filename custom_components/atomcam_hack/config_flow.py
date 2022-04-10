@@ -24,14 +24,14 @@ class AtomConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             self.host = user_input.get(CONF_HOST)
             await self.async_set_unique_id(format_mac(user_input.get(CONF_MAC)))
-            self._abort_if_unique_id_configured(updates={
-                CONF_HOST: self.host,
-            })
 
         errors = {}
         if self.host and self.unique_id:
             try:
                 ini = await get_ini(self.hass, self.host)
+                self._abort_if_unique_id_configured(updates={
+                    CONF_HOST: self.host,
+                })
                 return self.async_create_entry(
                     title=ini["HOSTNAME"],
                     data={
