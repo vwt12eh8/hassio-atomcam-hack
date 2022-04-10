@@ -1,9 +1,10 @@
 import asyncio
+import json
 from datetime import timedelta
 from logging import getLogger
 from typing import TypedDict
 
-from aiohttp.helpers import BasicAuth
+from aiohttp import ClientResponse, ClientSession
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -32,6 +33,8 @@ class Cmd(TypedDict):
 class Ini(TypedDict):
     appver: str
     ATOMHACKVER: str
+    CUSTOM_ZIP: str
+    CUSTOM_ZIP_URL: str
     HOSTNAME: str
     PRODUCT_MODEL: str
 
@@ -49,13 +52,16 @@ def get_device_info(hass: HomeAssistant, entry: ConfigEntry):
     )
 
 
-async def _get_base(hass: HomeAssistant, host: str, name: str, auth: BasicAuth = None):
-    session = async_get_clientsession(hass)
-    res = await session.get(f"http://{host}/cgi-bin/{name}", auth=auth)
+def _chk_res(res: ClientResponse):
     if res.status == 401:
         raise UpdateFailed("ログイン認証には対応していません")
     if res.status != 200:
         raise UpdateFailed(f"status: {res.status}")
+
+
+async def _get_base(session: ClientSession, host: str, name: str):
+    res = await session.get(f"http://{host}/cgi-bin/{name}")
+    _chk_res(res)
     res = await res.text()
 
     d = Ini()
@@ -67,19 +73,32 @@ async def _get_base(hass: HomeAssistant, host: str, name: str, auth: BasicAuth =
     return d
 
 
-async def get_ini(hass: HomeAssistant, host: str, auth: BasicAuth = None):
-    return await _get_base(hass, host, "hack_ini.cgi", auth)
+async def get_ini(session: ClientSession, host: str):
+    return await _get_base(session, host, "hack_ini.cgi")
+
+
+async def post_ini(session: ClientSession, host: str, ini: DataUpdateCoordinator[Ini]):
+    res = await session.post(f"http://{host}/cgi-bin/hack_ini.cgi", data=json.dumps(ini.data, separators=(',', ':')))
+    _chk_res(res)
+    ini.async_set_updated_data(ini.data)
+
+
+async def exec_cmd(session: ClientSession, host: str, cmd: str):
+    res = await session.post(f"http://{host}/cgi-bin/cmd.cgi", data=f'{{"exec":"{cmd}"}}')
+    _chk_res(res)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
+    session = async_get_clientsession(hass)
+
     async def _get_cmd():
-        return await _get_base(hass, entry.data[CONF_HOST], "cmd.cgi")
+        return await _get_base(session, entry.data[CONF_HOST], "cmd.cgi")
 
     async def _get_ini():
-        return await get_ini(hass, entry.data[CONF_HOST])
+        return await get_ini(session, entry.data[CONF_HOST])
 
     cmd = DataUpdateCoordinator(hass, _LOGGER, name="cmd.cgi", update_interval=timedelta(
                                 minutes=5), update_method=_get_cmd)

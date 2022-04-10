@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import (CoordinatorEntity,
                                                       DataUpdateCoordinator)
 
-from . import DOMAIN, Cmd, Ini, get_device_info
+from . import DOMAIN, Cmd, Ini, exec_cmd, get_device_info
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable):
@@ -87,7 +87,7 @@ class HackUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
 
     async def async_install(self, version: str | None, backup: bool, **kwargs):
         session = async_get_clientsession(self.hass)
-        await session.post(f"http://{self._entry.data[CONF_HOST]}/cgi-bin/cmd.cgi", data='{"exec":"update"}')
+        await exec_cmd(session, self._entry.data[CONF_HOST], "update")
         await asyncio.sleep(60)
 
     async def async_update(self):

@@ -1,4 +1,3 @@
-import json
 from typing import Callable, Optional
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
@@ -10,7 +9,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.update_coordinator import (CoordinatorEntity,
                                                       DataUpdateCoordinator)
 
-from . import DOMAIN, Ini, get_device_info
+from . import DOMAIN, Ini, exec_cmd, get_device_info, post_ini
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable):
@@ -58,12 +57,14 @@ class BaseSwitch(CoordinatorEntity[DataUpdateCoordinator[Ini]], SwitchEntity):
 
     async def _post(self, value: str):
         session = async_get_clientsession(self.hass)
-        data = self.coordinator.data
-        data[self._cmd] = value
-        self.coordinator.async_set_updated_data(data)
-        await session.post(f"http://{self._entry.data[CONF_HOST]}/cgi-bin/hack_ini.cgi", data=json.dumps(data, separators=(',', ':')))
+        host = self._entry.data[CONF_HOST]
+        await self.coordinator.async_refresh()
+
+        self.coordinator.data[self._cmd] = value
+
+        await post_ini(session, host, self.coordinator)
         if self._setcmd:
-            await session.post(f"http://{self._entry.data[CONF_HOST]}/cgi-bin/cmd.cgi", data=f'{{"exec":"{self._setcmd} {value}"}}')
+            await exec_cmd(session, host, f"{self._setcmd} {value}")
 
 
 class MinAlarmSwitch(BaseSwitch):

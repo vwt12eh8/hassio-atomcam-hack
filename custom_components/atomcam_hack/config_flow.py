@@ -3,6 +3,7 @@ from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
 from . import DOMAIN, get_ini
@@ -28,7 +29,8 @@ class AtomConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if self.host and self.unique_id:
             try:
-                ini = await get_ini(self.hass, self.host)
+                session = async_get_clientsession(self.hass)
+                ini = await get_ini(session, self.host)
                 self._abort_if_unique_id_configured(updates={
                     CONF_HOST: self.host,
                 })

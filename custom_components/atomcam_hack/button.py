@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.update_coordinator import (CoordinatorEntity,
                                                       DataUpdateCoordinator)
 
-from . import DOMAIN, Ini, get_device_info
+from . import DOMAIN, Ini, exec_cmd, get_device_info
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable):
@@ -38,7 +38,7 @@ class ExecButton(CoordinatorEntity[DataUpdateCoordinator[Ini]], ButtonEntity):
 
     async def async_press(self):
         session = async_get_clientsession(self.hass)
-        await session.post(f"http://{self._entry.data[CONF_HOST]}/cgi-bin/cmd.cgi", data=f'{{"exec":"{self._cmd}"}}')
+        await exec_cmd(session, self._entry.data[CONF_HOST], self._cmd)
 
 
 class EraseButton(ExecButton):
