@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
+from logging import getLogger
 from typing import Callable
 
 from homeassistant.components.update import (UpdateDeviceClass, UpdateEntity,
@@ -12,10 +14,35 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import (CoordinatorEntity,
                                                       DataUpdateCoordinator)
 
-from . import DOMAIN, Cmd, Ini, exec_cmd, get_device_info, post_ini
+from . import DOMAIN, Ini, exec_cmd, get_device_info, post_ini
+
+GITHUB_REPO = "https://github.com/mnakada/atomcam_tools"
+_LOGGER = getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable):
+    if "latest" not in hass.data[DOMAIN][entry.entry_id]:
+        session = async_get_clientsession(hass)
+
+        async def _get_latest():
+            res = await session.get(f"{GITHUB_REPO}/releases/latest", allow_redirects=False)
+            if res.status != 302:
+                return
+            location = res.headers.get("location", "")
+            idx = location.find("Ver.")
+            if idx < 0:
+                return
+            return location[idx + len("Ver."):]
+
+        latest = DataUpdateCoordinator[str](
+            hass, _LOGGER,
+            name="atomcam_tools/releases/latest",
+            update_interval=timedelta(minutes=5),
+            update_method=_get_latest,
+        )
+        hass.data[DOMAIN][entry.entry_id]["latest"] = latest
+        hass.async_run_job(latest.async_refresh)
+
     async_add_entities([
         FirmUpdate(hass, entry),
         HackUpdate(hass, entry),
@@ -50,13 +77,9 @@ class HackUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         super().__init__(hass.data[DOMAIN][entry.entry_id]["ini"])
-        self._cmd: DataUpdateCoordinator[Cmd] = hass.data[DOMAIN][entry.entry_id]["cmd"]
+        self.__latest: DataUpdateCoordinator[str] = hass.data[DOMAIN][entry.entry_id]["latest"]
         self._entry = entry
         self._attr_unique_id = self._entry.unique_id + "-ATOMHACKVER"
-
-    @property
-    def available(self):
-        return super().available and self._cmd.last_update_success
 
     @property
     def device_info(self):
@@ -68,7 +91,7 @@ class HackUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
 
     @property
     def latest_version(self):
-        return self._cmd.data.get("LATESTVER", None) or None
+        return self.__latest.data
 
     @property
     def name(self):
@@ -76,13 +99,13 @@ class HackUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
 
     @property
     def release_url(self):
-        return f"https://github.com/mnakada/atomcam_tools/releases/tag/Ver.{self.latest_version}"
+        return f"{GITHUB_REPO}/releases/tag/Ver.{self.latest_version}"
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self._cmd.async_add_listener(self._handle_coordinator_update)
+            self.__latest.async_add_listener(self._handle_coordinator_update)
         )
 
     async def async_install(self, version: str | None, backup: bool, **kwargs):
@@ -95,8 +118,7 @@ class HackUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
             data["CUSTOM_ZIP"] = "off"
         else:
             data["CUSTOM_ZIP"] = "on"
-            data[
-                "CUSTOM_ZIP_URL"] = f"https://github.com/mnakada/atomcam_tools/releases/download/Ver.{version}/atomcam_tools.zip"
+            data["CUSTOM_ZIP_URL"] = f"{GITHUB_REPO}/releases/download/Ver.{version}/atomcam_tools.zip"
 
         await post_ini(session, host, self.coordinator)
         await exec_cmd(session, host, "update")
@@ -111,4 +133,4 @@ class HackUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
         if not self.enabled:
             return
 
-        await asyncio.gather(self.coordinator.async_request_refresh(), self._cmd.async_request_refresh())
+        await asyncio.gather(self.coordinator.async_request_refresh(), self.__latest.async_request_refresh())

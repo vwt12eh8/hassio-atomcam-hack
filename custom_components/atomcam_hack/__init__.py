@@ -1,4 +1,3 @@
-import asyncio
 import json
 from datetime import timedelta
 from logging import getLogger
@@ -94,19 +93,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     session = async_get_clientsession(hass)
 
-    async def _get_cmd():
-        return await _get_base(session, entry.data[CONF_HOST], "cmd.cgi")
-
     async def _get_ini():
         return await get_ini(session, entry.data[CONF_HOST])
 
-    cmd = DataUpdateCoordinator(hass, _LOGGER, name="cmd.cgi", update_interval=timedelta(
-                                minutes=5), update_method=_get_cmd)
     ini = DataUpdateCoordinator(hass, _LOGGER, name="hack_ini.cgi",
                                 update_interval=timedelta(seconds=5), update_method=_get_ini)
-    await asyncio.gather(ini.async_config_entry_first_refresh(), cmd.async_config_entry_first_refresh())
+    await ini.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = {
-        "cmd": cmd,
         "ini": ini,
     }
 
