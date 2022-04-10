@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 from typing import Callable
 
@@ -83,9 +85,10 @@ class HackUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
             self._cmd.async_add_listener(self._handle_coordinator_update)
         )
 
-    async def async_install(self, **kwargs):
+    async def async_install(self, version: str | None, backup: bool, **kwargs):
         session = async_get_clientsession(self.hass)
         await session.post(f"http://{self._entry.data[CONF_HOST]}/cgi-bin/cmd.cgi", data='{"exec":"update"}')
+        await asyncio.sleep(60)
 
     async def async_update(self):
         """Update the entity.
