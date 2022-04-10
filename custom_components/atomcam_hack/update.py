@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import (CoordinatorEntity,
                                                       DataUpdateCoordinator)
 
-from . import DOMAIN, Cmd, Ini, exec_cmd, get_device_info
+from . import DOMAIN, Cmd, Ini, exec_cmd, get_device_info, post_ini
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable):
@@ -46,7 +46,7 @@ class FirmUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
 
 class HackUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_supported_features = UpdateEntityFeature.INSTALL
+    _attr_supported_features = UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         super().__init__(hass.data[DOMAIN][entry.entry_id]["ini"])
@@ -87,7 +87,19 @@ class HackUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
 
     async def async_install(self, version: str | None, backup: bool, **kwargs):
         session = async_get_clientsession(self.hass)
-        await exec_cmd(session, self._entry.data[CONF_HOST], "update")
+        host = self._entry.data[CONF_HOST]
+        await self.coordinator.async_refresh()
+
+        data = self.coordinator.data
+        if version is None:
+            data["CUSTOM_ZIP"] = "off"
+        else:
+            data["CUSTOM_ZIP"] = "on"
+            data[
+                "CUSTOM_ZIP_URL"] = f"https://github.com/mnakada/atomcam_tools/releases/download/Ver.{version}/atomcam_tools.zip"
+
+        await post_ini(session, host, self.coordinator)
+        await exec_cmd(session, host, "update")
         await asyncio.sleep(60)
 
     async def async_update(self):
