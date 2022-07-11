@@ -6,7 +6,7 @@
     "switch",
     "update"
   ],
-  "homeassistant": "2022.4.0",
+  "homeassistant": "2022.7.0",
   "iot_class": [
     "Local Polling"
   ]

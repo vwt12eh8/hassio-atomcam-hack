@@ -20,8 +20,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 
 class ExecButton(CoordinatorEntity[DataUpdateCoordinator[Ini]], ButtonEntity):
+    _attr_has_entity_name = True
     _cmd: str
-    _name: str
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         super().__init__(hass.data[DOMAIN][entry.entry_id]["ini"])
@@ -31,10 +31,6 @@ class ExecButton(CoordinatorEntity[DataUpdateCoordinator[Ini]], ButtonEntity):
     @property
     def device_info(self):
         return get_device_info(self.hass, self._entry)
-
-    @property
-    def name(self):
-        return self.coordinator.data["HOSTNAME"] + f" {self._name}"
 
     async def async_press(self):
         session = async_get_clientsession(self.hass)
@@ -46,7 +42,7 @@ class EraseButton(ExecButton):
     _attr_entity_registry_enabled_default = False
     _attr_icon = "mdi:folder-remove-outline"
     _cmd = "sderase"
-    _name = "SD-Card消去"
+    _attr_name = "SD-Card消去"
 
 
 class RebootButton(ExecButton):
@@ -54,4 +50,4 @@ class RebootButton(ExecButton):
     _attr_entity_registry_enabled_default = False
     _attr_device_class = ButtonDeviceClass.RESTART
     _cmd = "reboot"
-    _name = "リブート"
+    _attr_name = "リブート"

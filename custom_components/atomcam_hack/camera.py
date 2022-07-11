@@ -16,6 +16,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 
 class AtomCam(CoordinatorEntity[DataUpdateCoordinator[Ini]], Camera):
+    _attr_has_entity_name = True
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         CoordinatorEntity.__init__(
             self, hass.data[DOMAIN][entry.entry_id]["ini"])
@@ -30,10 +32,6 @@ class AtomCam(CoordinatorEntity[DataUpdateCoordinator[Ini]], Camera):
     @property
     def is_streaming(self):
         return self.coordinator.data.get("RTSPSERVER", "") == "on"
-
-    @property
-    def name(self):
-        return self.coordinator.data["HOSTNAME"]
 
     @property
     def supported_features(self):

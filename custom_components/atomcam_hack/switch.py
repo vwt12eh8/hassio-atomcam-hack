@@ -23,8 +23,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 class BaseSwitch(CoordinatorEntity[DataUpdateCoordinator[Ini]], SwitchEntity):
     _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_has_entity_name = True
     _cmd: str
-    _name: str
     _setcmd: Optional[str] = None
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
@@ -44,10 +44,6 @@ class BaseSwitch(CoordinatorEntity[DataUpdateCoordinator[Ini]], SwitchEntity):
         if value == "off":
             return False
         return None
-
-    @property
-    def name(self):
-        return self.coordinator.data["HOSTNAME"] + f" {self._name}"
 
     async def async_turn_off(self, **kwargs):
         await self._post("off")
@@ -71,14 +67,14 @@ class MinAlarmSwitch(BaseSwitch):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:car-speed-limiter"
     _cmd = "MINIMIZE_ALARM_CYCLE"
-    _name = "動体検知周期の短縮"
+    _attr_name = "動体検知周期の短縮"
 
 
 class RtspSwitch(BaseSwitch):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:video-outline"
     _cmd = "RTSPSERVER"
-    _name = "RTSP"
+    _attr_name = "RTSP"
     _setcmd = "rtspserver"
 
 
@@ -87,7 +83,7 @@ class RtspAudioSwitch(BaseSwitch):
     _attr_entity_registry_enabled_default = False
     _attr_icon = "mdi:microphone-outline"
     _cmd = "RTSP_AUDIO"
-    _name = "RTSP 音声"
+    _attr_name = "RTSP 音声"
     _setcmd = "rtspserver"
 
 
@@ -95,5 +91,5 @@ class WebhookSwitch(BaseSwitch):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:webhook"
     _cmd = "WEBHOOK"
-    _name = "WebHook"
+    _attr_name = "WebHook"
     _setcmd = "setwebhook"

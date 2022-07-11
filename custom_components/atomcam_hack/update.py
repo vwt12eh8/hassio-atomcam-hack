@@ -52,6 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 class FirmUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_entity_registry_enabled_default = False
+    _attr_has_entity_name = True
+    _attr_name = "Firmware version"
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         super().__init__(hass.data[DOMAIN][entry.entry_id]["ini"])
@@ -66,13 +68,11 @@ class FirmUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
     def installed_version(self):
         return self.coordinator.data["appver"]
 
-    @property
-    def name(self):
-        return self.coordinator.data["HOSTNAME"] + " Firmware Ver"
-
 
 class HackUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
     _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_has_entity_name = True
+    _attr_name = "Hack version"
     _attr_supported_features = UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
@@ -92,10 +92,6 @@ class HackUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
     @property
     def latest_version(self):
         return self.__latest.data
-
-    @property
-    def name(self):
-        return self.coordinator.data["HOSTNAME"] + " Hack Ver"
 
     @property
     def release_url(self):
