@@ -44,29 +44,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         hass.async_run_job(latest.async_refresh)
 
     async_add_entities([
-        FirmUpdate(hass, entry),
         HackUpdate(hass, entry),
     ])
-
-
-class FirmUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
-    _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_entity_registry_enabled_default = False
-    _attr_has_entity_name = True
-    _attr_name = "Firmware version"
-
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
-        super().__init__(hass.data[DOMAIN][entry.entry_id]["ini"])
-        self._entry = entry
-        self._attr_unique_id = self._entry.unique_id + "-appver"
-
-    @property
-    def device_info(self):
-        return get_device_info(self.hass, self._entry)
-
-    @property
-    def installed_version(self):
-        return self.coordinator.data["appver"]
 
 
 class HackUpdate(CoordinatorEntity[DataUpdateCoordinator[Ini]], UpdateEntity):
