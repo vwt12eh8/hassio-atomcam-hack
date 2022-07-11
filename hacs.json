@@ -1,13 +1,6 @@
 {
   "name": "ATOM Cam (Hacked)",
-  "domains": [
-    "button",
-    "camera",
-    "switch",
-    "update"
-  ],
-  "homeassistant": "2022.7.0",
-  "iot_class": [
-    "Local Polling"
-  ]
+  "render_readme": true,
+  "country": "JP",
+  "homeassistant": "2022.7.0"
 }

@@ -1,3 +1,5 @@
+![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)
+
 # HomeAssistant × ATOMCam(Hacked)
 [mnakada/atomcam_tools](https://github.com/mnakada/atomcam_tools)を導入済みのATOMCamシリーズをHomeAssistantから利用できるようにするためのカスタムコンポーネントです。
 
@@ -43,3 +45,5 @@
 
 もし更新されない場合、既存の設定は削除せずに、新規デバイスとして追加し直すことで設定を更新できます。
 その際、MACアドレスは既存のものから変えずに登録してください。
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=atomcam_hack)
