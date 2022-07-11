@@ -4,7 +4,7 @@
 [mnakada/atomcam_tools](https://github.com/mnakada/atomcam_tools)を導入済みのATOMCamシリーズをHomeAssistantから利用できるようにするためのカスタムコンポーネントです。
 
 ## 注意
-- HomeAssistantはVer.2022.4.0以上である必要があります
+- HomeAssistantはVer.2022.7.0以上である必要があります
 - atomcam_toolsを導入していない公式状態のATOMCamシリーズは連携できません
 - HomeAssistantにカスタムコンポーネントをインストールする方法は各自で調べてください
 - atomcam_toolsのログイン認証には対応していません（要望があれば対応検討します）
